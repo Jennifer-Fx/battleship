@@ -1,0 +1,172 @@
+# This is the programme for the simple battle ship (ship size 1) game with all functions in one document.
+
+from random import randint
+
+#### 1. GRID #####
+
+### 1.1. Create Grid ####
+# here I have done some adjustments just to make the entire code more uniform. 
+# I have zero problem if you prefere the other way of writing and change everything to that =)
+def create_grid(size):
+    """Creates the starting grid for battleship."""
+    grid = []
+    for _ in range(size):
+        current_line = []
+        for _ in range(size):
+            current_line.append(".")
+        grid.append(current_line)
+    return grid
+
+### 1.2. Print Grid ###
+# This shows the entire grid (user and pc choices) with nice spacing.
+def print_grid(grid):
+    """Prints the current state of the grid with both user and PC ships."""
+    for row in grid:
+        print(" ".join(row))
+
+# This shows only the user choices as we do not want the user to see the pc 
+# ship locations.
+def print_user_grid(grid):
+    """Prints the current state of the grid with only user ships and hits/misses."""
+    for row in grid:
+        printable_row = ["X" if cell == "X" else "." for cell in row]
+        print(" ".join(printable_row))
+
+
+#### 2. User selects their ships ####
+def evaluate_and_place(grid, row, col):
+    """Evaluates if spot is free = "." and then allows a ship to be placed """
+    if grid[row][col] == ".":
+        grid[row][col] = "X"  # "X" = user ships and "O" can be PC ships
+        return True
+    else:
+        print("Invalid position. Position is not free.")
+        return False
+         
+def user_select_ships(grid): # here i deleted the input num_ships and just assume we use 5 for now
+    """Allows the user to select positions for their ships, tests, if the position is within
+     boundaries of battle field and by using the evaluate_and_place function
+     it also tests if the spot is free."""
+    num_ships = 5   # this can be changed or also made a function input.
+    for ships in range(num_ships):
+        while True:
+            try:
+                row = int(input(f"Enter the row (0 to 9) for your ship number {ships}: "))
+                col = int(input(f"Enter the column (0 to 9)for your ship number {ships}: "))
+            
+                # Check if the position is within the grid boundaries 
+                if 0 <= row < len(grid) and 0 <= col < len(grid):
+                    placed = evaluate_and_place(grid, row, col)
+                    break
+                else:
+                    print("Invalid position. Row and column must be between 0 and 9.")
+            except ValueError:
+                print("Invalid input. Please try again.")
+    return grid
+
+
+#### 3. PC selects ships ####
+def pc_select_ships(grid):
+    """PC randomly selects 5 coordinates on which, if they are empty spots, 5 ships will be placed."""
+    num_ships = 5
+    for _ in range(num_ships):
+        while True:
+            row = randint(0,9)
+            col = randint(0,9)
+            # check if spot is free
+            if grid[row][col] == ".":
+                grid[row][col] = "O"
+                break
+                 
+    return grid
+
+
+#### 4. destroy ship #####
+# I have also edited this a bit so it is not specific to user/pc.
+
+def destroy_ship(grid, guess_row, guess_col):
+    """Check if a ship was destroyed at the specified coordinates."""
+    if 0 <= guess_row < len(grid) and 0 <= guess_col < len(grid[0]):
+        target = grid[guess_row][guess_col]
+        if target == ".":
+            print("Missed! There is no ship there.")
+            return False
+        elif target == "O":
+            print("You found a ship!")
+            grid[guess_row][guess_col] = "."  # Mark the ship as destroyed in the grid
+            return True
+        elif target == "X":
+            print("Invalid coordinates. You are attacking your own ship.")
+            return False
+    else:
+        print("Invalid coordinates. Please enter valid coordinates.")
+        return False
+        
+#### 5. The ultimate function ####
+def battleship_simple():
+    print("Hello Hello, to Simple Battleship Game!\n")
+    print("You are the captain of a battleship. Your mission is to sink all the opponent's ships.")
+    print("Each ship occupies one cell on the grid.\nThere are 5 opponent ships on the entire grid. Let the battle begin!\n")
+    print("First you have to choose a row and column position to place your ship. You have 5 ships, so you will be doing it 5 times. ")
+   
+    size = 10 # for now let's assume the grid size is 10x10.
+    grid = create_grid(size)
+    print_user_grid(grid)
+    grid = user_select_ships(grid)
+    grid = pc_select_ships(grid)
+    user_ships_remaining = 5
+    pc_ships_remaining = 5
+
+    print("\nPerfect. All ships are placed. Let the game begin =)")
+    
+    while user_ships_remaining > 0 and pc_ships_remaining > 0:
+            
+            # User's turn
+            print("\nYour turn:")
+            print_grid(grid)
+            
+            while True:
+                try:
+                    user_guess_row = int(input("Try to hit a pc-ship. Enter the row (0 to 9) to guess: "))
+                    user_guess_col = int(input("Ty to hit a pc-ship. Enter the column (0 to 9) to guess: "))
+                    if 0 <= user_guess_row <= 9 and 0 <= user_guess_col <= 9:
+                        break
+                    else:
+                        print("Invalid input. Row and column must be between 0 and 9.")
+                except ValueError:
+                    print("Invalid input. Please enter a valid numeric value.")
+                                
+            if destroy_ship(grid, user_guess_row, user_guess_col):
+                print("You destroyed an opponent's ship!")
+                pc_ships_remaining -= 1
+            else:
+                print("No ship found. Try again.")
+
+            if pc_ships_remaining == 0:
+                print("Congratulations! You sank all the opponent's ships. You win!")
+                break
+
+            # Computer's turn
+            print("\nComputer's turn:")
+            pc_guess_row, pc_guess_col = randint(0, 9), randint(0, 9)
+            print(f"Computer guessed: Row {pc_guess_row}, Column {pc_guess_col}")
+
+            if destroy_ship(grid, pc_guess_row, pc_guess_col):
+                print("Oh no! The computer destroyed one of your ships!")
+                user_ships_remaining -= 1
+            else:
+                print("Computer missed.")
+
+            if user_ships_remaining == 0:
+                print("Game over! The computer sank all your ships. Better luck next time.")
+                break
+
+
+battleship_simple()
+
+
+
+
+
+    
+
